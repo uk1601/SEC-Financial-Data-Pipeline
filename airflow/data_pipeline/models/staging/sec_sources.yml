@@ -1,0 +1,22 @@
+# -------------------------------------------------------------------------------
+# File: airflow/data_pipeline/models/staging/sec_sources.yml
+# -------------------------------------------------------------------------------
+# Source configuration for dbt staging models
+# Defines the external/raw tables imported from S3 into Snowflake
+# -------------------------------------------------------------------------------
+version: 2
+
+sources:
+  - name: sec_source             # Logical source name used by source(…)
+    description: "Raw SEC data landing tables"
+    database: dbt_db             # Snowflake database containing the raw tables
+    schema: dbt_schema           # Snowflake schema for raw data
+    tables:
+      - name: raw_sub            # Table of submission metadata
+        description: "Raw data from SEC submission file (sub.csv)"
+      - name: raw_num            # Table of numeric fact data
+        description: "Raw numeric financial data from SEC filings (num.csv)"
+      - name: raw_pre            # Table of presentation metadata
+        description: "Raw presentation metadata from SEC filings (pre.csv)"
+      - name: raw_tag            # Table of tag definitions
+        description: "Raw tag definitions metadata from SEC filings (tag.csv)"

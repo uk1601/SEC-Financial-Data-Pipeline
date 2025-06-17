@@ -1,0 +1,116 @@
+# -----------------------------------------------------------------------------
+# dbt schema configuration for staging models
+# Defines tests and constraints on model columns for data quality.
+# Version 2 schema spec
+# -----------------------------------------------------------------------------
+version: 2
+
+models:
+  - name: stg_sub  # Staging table for submission metadata
+    description: "Columns for SEC submissions including IDs, periods, and dates"
+    columns:
+      - name: submission_id  # Unique identifier for each submission
+        description: "Primary key linking to all staging tables"
+        tests:
+          - not_null      # Ensure no missing submission IDs
+          - unique        # Guarantee uniqueness across rows
+
+      - name: fiscal_period  # Fiscal period code (FY or quarter)
+        description: "Allowed values for fiscal reporting period"
+        tests:
+          - accepted_values:
+              values: ["FY", "Q1", "Q2", "Q3", "Q4"]  # Only these codes allowed
+
+      - name: company_id  # Identifier for the reporting company
+        description: "Internal company reference key"
+        tests:
+          - not_null      # Company ID must always be present
+
+      # Example: enabling period test if business logic requires
+      # - name: period
+      #   tests:
+      #     - not_null
+
+      - name: filing_date  # Date when the submission was filed
+        description: "Date of SEC filing"
+        tests:
+          - not_null      # Filing date is mandatory
+
+  - name: stg_num  # Staging table for numeric facts
+    description: "Numeric tags and values linked to submissions"
+    columns:
+      - name: submission_id
+        description: "Foreign key to stg_sub.submission_id"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_sub')
+              field: submission_id  # Enforce FK relationship to stg_sub
+
+      - name: tag  # Tag name for numeric fact
+        description: "Identifier for each numeric data point"
+        tests:
+          - not_null
+
+      - name: version  # Version of the numeric tag
+        description: "Versioning for numeric definitions"
+        tests:
+          - not_null
+
+  - name: stg_pre  # Staging table for presentation metadata
+    description: "Presentation properties for each submission facet"
+    columns:
+      - name: submission_id
+        description: "Foreign key to stg_sub.submission_id"
+        tests:
+          - not_null
+
+      - name: report  # Report type code
+        description: "Code for type of report (BS, IS, etc.)"
+        tests:
+          - not_null
+
+      - name: line  # Line number reference in presentation
+        tests:
+          - not_null
+
+      - name: statement_type  # Statement category code
+        description: "Allowed statement codes: balance sheet, income, cash flow, etc."
+        tests:
+          - accepted_values:
+              values: ["BS", "IS", "CF", "EQ", "CI", "SI", "UN", "CP"]
+
+      - name: directly_reported  # Flag if value is directly reported
+        description: "Binary indicator for reported values"
+        tests:
+          - accepted_values:
+              values: [0, 1]
+
+      - name: negating  # Flag if line is negating context
+        tests:
+          - accepted_values:
+              values: [0, 1]
+
+  - name: stg_tag  # Staging table for tag definitions
+    description: "Metadata for tags used in numeric and presentation tables"
+    columns:
+      - name: tag  # Tag identifier
+        tests:
+          - not_null
+
+      - name: version  # Tag versioning
+        tests:
+          - not_null
+
+      - name: custom  # Custom tag indicator
+        description: "Flag for custom vs standard tag"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+
+      - name: abstract  # Abstract tag indicator
+        description: "Flag if tag is abstract"
+        tests:
+          - accepted_values:
+              values: [0, 1]

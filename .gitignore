@@ -1,0 +1,11 @@
+/__pycache__/
+venv/
+output.log
+*.env
+*.pyc
+*.pyo% 
+*.json
+*.DS_Store
+readme.htm
+logs
+plugins
